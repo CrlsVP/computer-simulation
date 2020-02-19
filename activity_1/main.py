@@ -12,7 +12,7 @@ def clear():
     # for windows
     if name == 'nt':
         _ = system('cls')
-    # for mac and linux(here, os.name is 'posix')
+    # for mac and linux
     else:
         _ = system('clear')
 
@@ -30,23 +30,21 @@ def abs_2_rel(xy_i, xy_f):
     return(rel_coord[-1])
 
 
-# def rel_2_abs(xy_i, xy_f):
-#     pass
-
-
 def read_from_file():
     clear()
+    global current_file
     found = False
     while(not found):
         found = True
         try:
             path = 'C:/dev/computer-simulation/activity_1/files/' + str(
                 input("Please introduce the name of the file (files must be inside /files path and without .txt): ")) + '.txt'
+
             f = open(path, "r")
         except FileNotFoundError:
             print("File does not exist! Try again")
             found = False
-
+    current_file = path[:-4]
     lines = f.readlines()
     file_coord = []
     # for each line in the file, appends a coordinate ignoring the line break
@@ -70,20 +68,23 @@ def on_click(event):
     ix, iy = event.xdata, event.ydata
     global counter
 
-    abs_coord.append([ix, iy])
-    write_to_file('{}, {}\n'.format(ix, iy))
-    if(counter == 0):
-        rel_coord.append(abs_coord[0])
+    if(ix == None or iy == None):
+        pass
     else:
-        #abs_2_rel(abs_coord[counter], rel_coord[counter-1])
-        abs_2_rel(abs_coord[counter], abs_coord[counter-1])
+        abs_coord.append([ix, iy])
+        write_to_file('{}, {}\n'.format(ix, iy))
+        if(counter == 0):
+            rel_coord.append(abs_coord[0])
+        else:
+            #abs_2_rel(abs_coord[counter], rel_coord[counter-1])
+            abs_2_rel(abs_coord[counter], abs_coord[counter-1])
 
-    x.append(ix)
-    y.append(iy)
-    plt.scatter(x, y, color='green')
-    plt.draw()
-    print_table()
-    counter += 1
+        x.append(ix)
+        y.append(iy)
+        plt.scatter(x, y, color='green')
+        plt.draw()
+        print_table()
+        counter += 1
 
 
 def interactive(coord=None):
@@ -95,7 +96,6 @@ def interactive(coord=None):
         plt.show()
         plt.draw()
     else:
-
         i = 0
         for xy in coord:
             abs_coord.append([xy[0], xy[1]])
@@ -110,7 +110,11 @@ def interactive(coord=None):
         for (i, xy) in zip(range(len(abs_coord)), abs_coord):
             plt.annotate(i+1, xy, fontsize=8, ha='center')
         print_table()
+        # plt.show()
+
+        fig.canvas.mpl_connect('button_press_event', on_click)
         plt.show()
+        plt.draw()
 
 
 def print_table():

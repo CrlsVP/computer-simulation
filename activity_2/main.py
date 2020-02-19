@@ -1,8 +1,8 @@
+from matplotlib.ticker import MaxNLocator
+from os import system, name
 import matplotlib.pyplot as plt
 import numpy as np
-from os import system, name
 import time
-from matplotlib.ticker import MaxNLocator
 
 
 x = []
@@ -10,6 +10,7 @@ y = []
 
 line = {0: [], 1: []}
 counter = 0
+is_painting = False
 
 
 def clear():
@@ -72,10 +73,40 @@ def round_dda(a):
     return int(a + 0.5)
 
 
-def draw_dda(x1, y1, x2, y2):
+def draw_dda(start, end):
+    coord = [start]
+    x0, y0 = start
+    x1, y1 = end
+
+    dx = x1 - x0
+    dy = y1 - y0
+
+    if(abs(dx) >= abs(dy)):
+        steps = abs(dx)
+    else:
+        steps = abs(dy)
+
+    dx = dx/steps
+    dy = dy/steps
+
+    x = x0
+    y = y0
+
+    i = 1
+    while(i <= steps):
+        #putpixel(x, y, RED);
+        x += dx
+        y += dy
+        i = i+1
+        coord.append([round_dda(x), round_dda(y)])
+    return(coord)
+
+
+def draw_dda_2(x1, y1, x2, y2):
     coord = []
     x, y = x1, y1
     length = (x2-x1) if (x2-x1) > (y2-y1) else (y2-y1)
+
     dx = (x2-x1)/float(length)
     dy = (y2-y1)/float(length)
     coord.append([round_dda(x), round_dda(y)])
@@ -97,34 +128,51 @@ def paint_pixel(xy, opt):
 
 def on_click(event):
     global counter
-    ix, iy = event.xdata, event.ydata
-    ix = np.rint(ix) - 0.5
-    iy = np.rint(iy) - 0.5
-    x.append(ix)
-    y.append(iy)
-    plt.plot(ix, iy, marker='s', markersize=10, color='black')
-    plt.draw()
-    line[counter] = [int(ix-0.5), int(iy-0.5)]
-    counter += 1
-    if(counter == 2):
-        counter = 0
-        clear()
-        print('Now painting with Bressenham\n')
-        for pixel in draw_bress(line[0], line[1]):
-            paint_pixel(pixel, 0)
-            plt.pause(0.05)
-        plt.pause(1)
-        print('Now painting with DDA\n')
-        for pixel in draw_dda(line[0][0], line[0][1], line[1][0], line[1][1]):
-            paint_pixel(pixel, 1)
-            plt.pause(0.05)
+    global is_painting
+    if not(is_painting):
+        ix, iy = event.xdata, event.ydata
 
-        line[0] = []
-        line[1] = []
+        if(ix == None or iy == None):
+            pass
+        else:
+            # * Get the coordinates of the grid and substract the diff;
+            # * the grid is divided by .5 ticks, and the clicks
+            # * retrieve real numbers, so:
+            ix = int(ix) + 0.5
+            iy = int(iy) + 0.5
+
+            plt.plot(ix, iy, marker='s', markersize=10, color='black')
+            plt.draw()
+
+            # Add points to the line
+            line[counter] = [int(ix), int(iy)]
+
+            counter += 1
+            if(counter == 2):
+                counter = 0
+                clear()
+                is_painting = True
+                plt.pause(1)
+                # Bresenham's
+                print('Now painting with Bresenham\n')
+                for pixel in draw_bress(line[0], line[1]):
+                    paint_pixel(pixel, 0)
+                    plt.pause(0.05)
+
+                plt.pause(1)
+                # DDA
+                print('Now painting with DDA\n')
+                for pixel in draw_dda(line[0], line[1]):
+                    paint_pixel(pixel, 1)
+                    plt.pause(0.05)
+
+                # Restart the line
+                line[0] = []
+                line[1] = []
+                is_painting = False
 
 
 if __name__ == "__main__":
-
     fig = plt.figure(figsize=(7, 7))
     ax = fig.gca()
     plt.gca().set_aspect("equal")
