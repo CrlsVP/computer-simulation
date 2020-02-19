@@ -3,7 +3,7 @@ from os import system, name
 import matplotlib.pyplot as plt
 import numpy as np
 import time
-
+import timeit
 
 x = []
 y = []
@@ -20,6 +20,15 @@ def clear():
     # for mac and linux(here, os.name is 'posix')
     else:
         _ = system('clear')
+
+
+def paint_pixel(xy, opt):
+    if(opt == 0):
+        clr = 'red'
+    else:
+        clr = 'blue'
+    plt.plot(xy[0]+0.5, xy[1]+0.5, marker='s', markersize=10, color=clr)
+    plt.draw()
 
 
 def draw_bress(start, end):
@@ -102,30 +111,6 @@ def draw_dda(start, end):
     return(coord)
 
 
-def draw_dda_2(x1, y1, x2, y2):
-    coord = []
-    x, y = x1, y1
-    length = (x2-x1) if (x2-x1) > (y2-y1) else (y2-y1)
-
-    dx = (x2-x1)/float(length)
-    dy = (y2-y1)/float(length)
-    coord.append([round_dda(x), round_dda(y)])
-    for _ in range(length):
-        x += dx
-        y += dy
-        coord.append([round_dda(x), round_dda(y)])
-    return(coord)
-
-
-def paint_pixel(xy, opt):
-    if(opt == 0):
-        clr = 'red'
-    else:
-        clr = 'blue'
-    plt.plot(xy[0]+0.5, xy[1]+0.5, marker='s', markersize=10, color=clr)
-    plt.draw()
-
-
 def on_click(event):
     global counter
     global is_painting
@@ -133,7 +118,9 @@ def on_click(event):
         ix, iy = event.xdata, event.ydata
 
         if(ix == None or iy == None):
-            pass
+            plt.close()
+            create_grid()
+            # pass
         else:
             # * Get the coordinates of the grid and substract the diff;
             # * the grid is divided by .5 ticks, and the clicks
@@ -150,33 +137,40 @@ def on_click(event):
             counter += 1
             if(counter == 2):
                 counter = 0
-                clear()
-                is_painting = True
-                plt.pause(1)
-                # Bresenham's
-                print('Now painting with Bresenham\n')
-                for pixel in draw_bress(line[0], line[1]):
-                    paint_pixel(pixel, 0)
-                    plt.pause(0.05)
+                if(line[0] == line[1]):
+                    print('That is just a dot!\n')
+                else:
+                    clear()
+                    is_painting = True
+                    plt.pause(1)
+                    # Bresenham's
+                    print('Now painting with Bresenham')
+                    for pixel in draw_bress(line[0], line[1]):
+                        paint_pixel(pixel, 0)
+                        plt.pause(0.05)
+                    print("Execution time of Bresenham Algorithm: {}".format(timeit.timeit(
+                        stmt="draw_bress({}, {})".format(line[0], line[1]), setup="from __main__ import draw_bress", number=1)))
+                    plt.pause(1)
+                    print('\n--------------------------------------\n')
+                    # DDA
+                    print('Now painting with DDA')
+                    for pixel in draw_dda(line[0], line[1]):
+                        paint_pixel(pixel, 1)
+                        plt.pause(0.05)
+                    print("Execution time of DDA Algorithm: {}".format(timeit.timeit(
+                        stmt="draw_dda({}, {})".format(line[0], line[1]), setup="from __main__ import draw_dda", number=1)))
+                    # Restart the line
+                    line[0] = []
+                    line[1] = []
+                    is_painting = False
 
-                plt.pause(1)
-                # DDA
-                print('Now painting with DDA\n')
-                for pixel in draw_dda(line[0], line[1]):
-                    paint_pixel(pixel, 1)
-                    plt.pause(0.05)
 
-                # Restart the line
-                line[0] = []
-                line[1] = []
-                is_painting = False
-
-
-if __name__ == "__main__":
+def create_grid():
     fig = plt.figure(figsize=(7, 7))
+
     ax = fig.gca()
     plt.gca().set_aspect("equal")
-    plt.title('DDA & Bressenham')
+    plt.title('DDA & Bressenham\n(for cleaning the grid, just click outside)')
     ax.set(xlim=(0, 30), ylim=(0, 30))  # arbitrary data
     ax.yaxis.set_major_locator(MaxNLocator(nbins=30, integer=True))
     ax.xaxis.set_major_locator(MaxNLocator(
@@ -190,7 +184,13 @@ if __name__ == "__main__":
     ax.set_yticklabels(np.arange(1, 31), minor=True, fontsize=6)
     ax.tick_params(axis=u'both', which=u'both', length=0)
 
-    fig.canvas.mpl_connect('button_press_event', on_click)
-
     plt.grid()
+    fig.canvas.mpl_connect('button_press_event', on_click)
     plt.show()
+
+
+if __name__ == "__main__":
+    #fig = plt.figure(figsize=(7, 7))
+    create_grid()
+    #fig.canvas.mpl_connect('button_press_event', on_click)
+    # plt.show()
