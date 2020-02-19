@@ -1,3 +1,8 @@
 {
-    "python.pythonPath": "/home/carlos-vp/.local/share/virtualenvs/computer-simulation-JO-lk_pS/bin/python"
+    "python.pythonPath": "/home/carlos-vp/.local/share/virtualenvs/computer-simulation-JO-lk_pS/bin/python",
+    "cSpell.words": [
+        "bres",
+        "bresenham",
+        "draw"
+    ]
 }
