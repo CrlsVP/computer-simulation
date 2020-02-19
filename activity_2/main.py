@@ -1,15 +1,27 @@
-def get_line(start, end):
-    """Bresenham's Line Algorithm
-    Produces a list of tuples from start and end
+import matplotlib.pyplot as plt
+import numpy as np
+from os import system, name
+import time
+from matplotlib.ticker import MaxNLocator
 
-    >>> points1 = get_line((0, 0), (3, 4))
-    >>> points2 = get_line((3, 4), (0, 0))
-    >>> assert(set(points1) == set(points2))
-    >>> print points1
-    [(0, 0), (1, 1), (1, 2), (2, 3), (3, 4)]
-    >>> print points2
-    [(3, 4), (2, 3), (1, 2), (1, 1), (0, 0)]
-    """
+
+x = []
+y = []
+
+line = {0: [], 1: []}
+counter = 0
+
+
+def clear():
+    # for windows
+    if name == 'nt':
+        _ = system('cls')
+    # for mac and linux(here, os.name is 'posix')
+    else:
+        _ = system('clear')
+
+
+def draw_bress(start, end):
     # Setup initial conditions
     x1, y1 = start
     x2, y2 = end
@@ -56,24 +68,81 @@ def get_line(start, end):
     return points
 
 
-def ROUND(a):
+def round_dda(a):
     return int(a + 0.5)
 
 
-def drawDDA(x1, y1, x2, y2):
+def draw_dda(x1, y1, x2, y2):
+    coord = []
     x, y = x1, y1
     length = (x2-x1) if (x2-x1) > (y2-y1) else (y2-y1)
     dx = (x2-x1)/float(length)
     dy = (y2-y1)/float(length)
-    print('x = %s, y = %s' % (((ROUND(x), ROUND(y)))))
-    for i in range(length):
+    coord.append([round_dda(x), round_dda(y)])
+    for _ in range(length):
         x += dx
         y += dy
-        print('x = %s, y = %s' % (((ROUND(x), ROUND(y)))))
+        coord.append([round_dda(x), round_dda(y)])
+    return(coord)
+
+
+def paint_pixel(xy, opt):
+    if(opt == 0):
+        clr = 'red'
+    else:
+        clr = 'blue'
+    plt.plot(xy[0]+0.5, xy[1]+0.5, marker='s', markersize=10, color=clr)
+    plt.draw()
+
+
+def on_click(event):
+    global counter
+    ix, iy = event.xdata, event.ydata
+    ix = np.rint(ix) - 0.5
+    iy = np.rint(iy) - 0.5
+    x.append(ix)
+    y.append(iy)
+    plt.plot(ix, iy, marker='s', markersize=10, color='black')
+    plt.draw()
+    line[counter] = [int(ix-0.5), int(iy-0.5)]
+    counter += 1
+    if(counter == 2):
+        counter = 0
+        clear()
+        print('Now painting with Bressenham\n')
+        for pixel in draw_bress(line[0], line[1]):
+            paint_pixel(pixel, 0)
+            plt.pause(0.05)
+        plt.pause(1)
+        print('Now painting with DDA\n')
+        for pixel in draw_dda(line[0][0], line[0][1], line[1][0], line[1][1]):
+            paint_pixel(pixel, 1)
+            plt.pause(0.05)
+
+        line[0] = []
+        line[1] = []
 
 
 if __name__ == "__main__":
-    start = (3, 5)
-    end = (7, 9)
-    drawDDA(3, 5, 7, 9)
-    print(get_line(start, end))
+
+    fig = plt.figure(figsize=(7, 7))
+    ax = fig.gca()
+    plt.gca().set_aspect("equal")
+    plt.title('DDA & Bressenham')
+    ax.set(xlim=(0, 30), ylim=(0, 30))  # arbitrary data
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=30, integer=True))
+    ax.xaxis.set_major_locator(MaxNLocator(
+        nbins=30, integer=True))    # ax.plot(x)
+
+    ax.set_xticklabels('')
+    ax.set_yticklabels('')
+    ax.set_xticks(np.arange(0, 30, 0.5), minor=True)
+    ax.set_yticks(np.arange(0, 30, 0.5), minor=True)
+    ax.set_xticklabels(np.arange(1, 31), minor=True, fontsize=6)
+    ax.set_yticklabels(np.arange(1, 31), minor=True, fontsize=6)
+    ax.tick_params(axis=u'both', which=u'both', length=0)
+
+    fig.canvas.mpl_connect('button_press_event', on_click)
+
+    plt.grid()
+    plt.show()
