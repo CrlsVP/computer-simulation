@@ -59,23 +59,48 @@ def on_click(event):
                     is_painting = True
                     plt.pause(1)
                     radius = calculateDistance(line[0], line[1])
+
                     # DDA without octets
                     print('Now painting with DDA (without octets)')
-                    #draw_dda(line[0][0], line[0][1], radius)
-                    # print("Execution time of DDA Algorithm without octets: {}".format(timeit.timeit(
-                    #     stmt="draw_dda({}, {}, {})".format(line[0], line[1], radius), setup="from __main__ import draw_dda", number=1)))
+                    for pixel in draw_dda(line[0][0], line[0][1], radius):
+                        if((30 < pixel[0] < 1) or (30 < pixel[1] < 1)):
+                            pass
+                        else:
+                            paint_pixel(
+                                [line[0][0]+pixel[0], line[0][1]+pixel[1]], 'red')
+                        plt.pause(0.03)
+
+                    print("Execution time of DDA Algorithm without octets: {}".format(timeit.timeit(
+                        stmt="draw_dda({}, {}, {})".format(line[0][0], line[1][1], radius), setup="from __main__ import draw_dda", number=1)))
+                    plt.pause(1)
+
+                    print('\n--------------------------------------\n')
+
+                    # DDA with octets
+                    print('Now painting with DDA (with octets)')
+                    for pixel in draw_dda_oct(line[0][0], line[0][1], radius):
+                        if((30 < pixel[0] < 1) or (30 < pixel[1] < 1)):
+                            pass
+                        else:
+                            draw_octets(line[0][0], line[0][1],
+                                        pixel[0], pixel[1], 'blue')
+
+                    print("Execution time of DDA Algorithm with octets: {}".format(timeit.timeit(
+                        stmt="draw_dda_oct({}, {}, {})".format(line[0][0], line[1][1], radius), setup="from __main__ import draw_dda_oct", number=1)))
                     plt.pause(1)
                     print('\n--------------------------------------\n')
-                    # DDA without octets
-                    print('Now painting with DDA')
-                    draw_dda_oct(line[0][0], line[0][1], radius)
-                    plt.pause(1)
-                    print('\n--------------------------------------\n')
-                    # DDA
+
+                    # Bresenham
                     print('Now painting with Bresenham')
-                    #draw_bres(line[0][0], line[0][1], radius)
-                    # print("Execution time of Bresenham Algorithm: {}".format(timeit.timeit(
-                    #     stmt="draw_bres({}, {}, {})".format(line[0], line[1], radius), setup="from __main__ import draw_bres", number=1)))
+                    for pixel in draw_bres(line[0][0], line[0][1], radius):
+                        if((30 < pixel[0] < 1) or (30 < pixel[1] < 1)):
+                            pass
+                        else:
+                            draw_octets(line[0][0], line[0][1],
+                                        pixel[0], pixel[1], 'yellow')
+                    print("Execution time of Bresenham Algorithm: {}".format(timeit.timeit(
+                        stmt="draw_bres({}, {}, {})".format(line[0][0], line[1][1], radius), setup="from __main__ import draw_bres", number=1)))
+
                     # Restart the line
                     line[0] = []
                     line[1] = []
@@ -129,62 +154,67 @@ def calculateDistance(xy_i, xy_f):
     dist = math.sqrt((xy_f[0] - xy_i[0])**2 + (xy_f[1] - xy_i[1])**2)
     return dist
 
+# ! Algoritmo DDA sin uso de octetos
+# * El algoritmo funciona basándose en la derivada de la ecuación de la circunferencia
+# * la cual está dada por x^2 + y^2 - r^ = 0 (en donde r es constante), teniendo así
+# * la ecuación y_k = sqrt(r^2 - x_k^2). Cabe mencionar que en este estrategia implementada
+# * no se toman en cuenta los valores del punto central en la ecuación sino hasta después,
+# * en el coloreado de los puntos.
 
-def draw_dda(x_c, y_c, r):
-    x_k = 0
-    y_k = int(math.sqrt((r*r) - (x_k * x_k)))
-
-    # Upper Circle
-    paint_pixel([x_c+x_k, y_c+y_k], 'red')
-    paint_pixel([x_c-x_k, y_c+y_k], 'red')
-
-    # Lower Circle
-    paint_pixel([x_c+x_k, y_c-y_k], 'red')
-    paint_pixel([x_c-x_k, y_c-y_k], 'red')
-    plt.pause(0.03)
-    while(y_k > 0):
-        x_k += 1
-        y_k = round(math.sqrt((r*r) - (x_k * x_k)))
-
-        # Upper Circle
-        paint_pixel([x_c+x_k, y_c+y_k], 'red')
-        paint_pixel([x_c-x_k, y_c+y_k], 'red')
-
-        # Lower Circle
-        paint_pixel([x_c+x_k, y_c-y_k], 'red')
-        paint_pixel([x_c-x_k, y_c-y_k], 'red')
-
-        plt.pause(0.03)
-
-    y_k = 0
-    x_k = int(math.sqrt((r*r) - (y_k * y_k)))
-    while(x_k > 0):
-        y_k += 1
-        x_k = round(math.sqrt((r*r) - (y_k * y_k)))
-
-        # Upper Circle
-        paint_pixel([x_c+x_k, y_c+y_k], 'pink')
-        paint_pixel([x_c-x_k, y_c+y_k], 'pink')
-
-        # Lower Circle
-        paint_pixel([x_c+x_k, y_c-y_k], 'pink')
-        paint_pixel([x_c-x_k, y_c-y_k], 'pink')
-
-        plt.pause(0.03)
+# ! y_k = valor a seguir en el eje de las Y iterando en X
+# ! para cuando se itera en Y, el x_k se obtiene de igual manera que cuando se itera en X
+#  ! con la diferencia de que las variables cambian de posición solamente
 
 
-def draw_dda_oct(x_c, y_c, r):
+def draw_dda(x_c, y_c, r2):
+    r = round(r2)
     coord = []
     x_k = 0
     y_k = int(math.sqrt((r*r) - (x_k * x_k)))
 
-    #draw_octets(x_c, y_c, x_k, y_k, 'blue')
+    sign_y = 1
+    sign_x = 1
+
+    # Gracias a esta iteración es posible colorear los arcos superior e inferior (cuando se
+    # itera sobre X) y los arcos derecho e izquierdo (cuando se itera sobre Y). Lo único que
+    # hace es cambiar los signos cuando corresponda. Esto evita estructuras iterativas de más
+    # y sólo emplea la misma para repetirse las veces que lo necesite
+    for i in range(4):
+        if(i == 1):
+            sign_x = -1
+        if(i == 2):
+            sign_y = -1
+        if(i == 3):
+            sign_x = 1
+
+        coord.append([(x_k * sign_x), (y_k * sign_y)])
+        while(y_k > 0):
+            x_k += 1
+            y_k = round(math.sqrt((r*r) - (x_k * x_k)))
+            coord.append([(x_k * sign_x), (y_k * sign_y)])
+
+        y_k = 0
+        x_k = int(math.sqrt((r*r) - (y_k * y_k)))
+
+        while(x_k > 0):
+            y_k += 1
+            x_k = round(math.sqrt((r*r) - (y_k * y_k)))
+            coord.append([(x_k * sign_x), (y_k * sign_y)])
+
+    return(coord)
+
+
+def draw_dda_oct(x_c, y_c, r2):
+    r = round(r2)
+    coord = []
+    x_k = 0
+    y_k = int(math.sqrt((r*r) - (x_k * x_k)))
     coord.append([x_k, y_k])
+
     while(y_k > x_k):
         x_k += 1
         y_k = round(math.sqrt((r*r) - (x_k * x_k)))
         coord.append([x_k, y_k])
-        #draw_octets(x_c, y_c, x_k, y_k, 'blue')
 
     return(coord)
 
@@ -194,9 +224,8 @@ def draw_bres(x_c, y_c, r):
     x = 0
     y = round(r)
     p = 3 - (2 * r)
-
     coord.append([x, y])
-    #draw_octets(x_c, y_c, x, y, 'yellow')
+
     while (x <= y):
         if (p <= 0):
             p += (4 * x) + 6
@@ -205,9 +234,17 @@ def draw_bres(x_c, y_c, r):
             y -= 1
         x += 1
         coord.append([x, y])
-        # draw_octets(x_c, y_c, x, y, 'yellow')
+
+    return(coord)
 
 
+# ! Funciones adicionales de prueba
+# * Las funciones enlistadas a continuación se utilizaron a modo
+# * de prueba, ya que son implementaciones del algoritmo DDA con modificaciones
+# * las cuales hacen uso de un valor epsilon que se detalla más a fondo en el
+# * reporte de la actividad. La función draw_dda_dx utiliza una derivada parcial
+# * para el cálculo de valores en y, de igual manera se detalla más a fondo en
+# * el reporte
 def epsilon(r):
     i = 1
     while(r > pow(2, i)):

@@ -89,14 +89,14 @@ def draw_bres(start, end):
     dx = abs(x2 - x1)
     dy = abs(y2 - y1)
 
-    # ! In a more efficient way we could do:
-    # ? dx = x2 - x1)
-    # ? dy = y2 - y1)
+    # # ! In a more efficient way we could do:
+    # dx = x2 - x1
+    # dy = y2 - y1
 
     # Calculate error
     error = 2 * (dy-dx)
-    # ! In a more efficient way we could do:
-    # ? error = int(dx / 2.0)
+    # # ! In a more efficient way we could do:
+    # error = int(dx / 2.0)
 
     # Move forward or backwards depending on the orientation of the line
     ystep = 1 if y1 < y2 else -1
@@ -109,11 +109,11 @@ def draw_bres(start, end):
         coord = (y, x) if is_steep else (x, y)
         points.append(coord)
 
-        # ! In a more efficient way we could do:
-        # ? error -= abs(dy)
-        # ? if (error < 0):
-        # ?   y += ystep
-        # ?   error += (2 * dy)
+        # # ! In a more efficient way we could do:
+        # error -= abs(dy)
+        # if (error < 0):
+        #     y += ystep
+        #     error += (2 * dy)
 
         if (error < 0):
             #y += ystep

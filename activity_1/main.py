@@ -76,7 +76,6 @@ def on_click(event):
         if(counter == 0):
             rel_coord.append(abs_coord[0])
         else:
-            #abs_2_rel(abs_coord[counter], rel_coord[counter-1])
             abs_2_rel(abs_coord[counter], abs_coord[counter-1])
 
         x.append(ix)
@@ -102,7 +101,7 @@ def interactive(coord=None):
             if(i == 0):
                 rel_coord.append(abs_coord[0])
             else:
-                abs_2_rel(abs_coord[counter], abs_coord[counter-1])
+                abs_2_rel(abs_coord[i], abs_coord[i-1])
             i += 1
             plt.scatter(xy[0], xy[1], color='red')
             plt.draw()
@@ -110,8 +109,7 @@ def interactive(coord=None):
         for (i, xy) in zip(range(len(abs_coord)), abs_coord):
             plt.annotate(i+1, xy, fontsize=8, ha='center')
         print_table()
-        # plt.show()
-
+        
         fig.canvas.mpl_connect('button_press_event', on_click)
         plt.show()
         plt.draw()
